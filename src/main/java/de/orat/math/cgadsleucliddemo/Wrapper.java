@@ -206,29 +206,28 @@ public interface Wrapper {
             Vector3d se_euclidean_vector);
     
     @CGA(
+        """
+        d4 := 0.1333
+        d6 := 0.0996
+        d4,d6
+        """)
+    public double[][] testScalar();
+    
+    @CGA(
     """
     d4 := 0.1333
     d6 := 0.0996
     Pe := p+0.5p²εᵢ+ε₀
     P5e := p-d6 ae
     P5 := P5e+0.5P5e²εᵢ+ε₀
-    //P5 = createPoint(px - d6 * ae1, py - d6 * ae2, pz - d6 * ae3)
-
-    // sphere around P5
     Sc := P5-0.5d4²εᵢ
-
-    // sphere around the origin
     K0 := ε₀+(Sc⋅ε₀)εᵢ
-    // intersection of Sc and K0
     C5k := Sc^K0
-    // intersection of C5k and the horizontal plane through P5
     Qc := (C5k⋅(P5^ε₁^ε₂^εᵢ))*
-    // point Pc with an offset d4 from P5
-    Pc := ExtractFirstPoint(Qc)
-    // plane through joints 1, 2, 3 and 4
-    PIc := (ε₀^ε₃^Pc^εᵢ)*
+    Pe, P5e, Sc, K0, C5k, Qc
     """)
-    public double[] determinePlanePc(Point3d p_euclidean_vector, Vector3d ae_euclidean_vector, 
-                Vector3d se_euclidean_vector);
+    public double[][] testIKPart1(Point3d p_euclidean_vector, Vector3d ae_euclidean_vector);
     
+    //Pc := ExtractFirstPoint(Qc)
+    //PIc := (ε₀^ε₃^Pc^εᵢ)*
 }

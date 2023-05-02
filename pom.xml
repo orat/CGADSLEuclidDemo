@@ -19,18 +19,28 @@
     <dependencies>
         <dependency>
             <groupId>de.dhbw.rahmlab</groupId>
-            <artifactId>GeomAlgeLang</artifactId>
-            <version>1.0-SNAPSHOT</version>
+			<artifactId>annotation-processing</artifactId>
+			<version>${annotation-processing.version}</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>*</artifactId>
+					<groupId>*</groupId>
+				</exclusion>
+			</exclusions>
         </dependency>
+
         <dependency>
             <groupId>de.dhbw.rahmlab</groupId>
-            <artifactId>annotation-processing</artifactId>
+			<artifactId>GeomAlgeLang</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
         <dependency>
-            <groupId>de.orat.math.view</groupId>
-            <artifactId>EuclidView3d</artifactId>
-            <version>1.0-SNAPSHOT</version>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.9.2</version>
+			<scope>test</scope>
         </dependency>
         <!--dependency>
             <groupId>de.orat.math</groupId>
@@ -39,7 +49,6 @@
             <type>jar</type>
         </dependency-->
     </dependencies>
-    
     
     <build>
         <testResources>
@@ -56,11 +65,13 @@
                     <generatedSourcesDirectory>${generatedSourcesDirectory}</generatedSourcesDirectory>
                     <generatedTestSourcesDirectory>${generatedTestSourcesDirectory}</generatedTestSourcesDirectory>
                     <annotationProcessorPaths>
+
                         <path>
                             <groupId>de.dhbw.rahmlab</groupId>
                             <artifactId>annotation-processing</artifactId>
                             <version>${annotation-processing.version}</version>
                         </path>
+
                     </annotationProcessorPaths>
                 </configuration>
                 <dependencies>
@@ -96,12 +107,12 @@
                     <execution>
                         <phase>generate-test-sources</phase>
                         <goals>
-                                <goal>add-test-source</goal>
+                            <goal>add-test-source</goal>
                         </goals>
                         <configuration>
-                                <sources>
-                                        <source>${generatedTestSourcesDirectory}</source>
-                                </sources>
+                            <sources>
+                                <source>${generatedTestSourcesDirectory}</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
