@@ -226,7 +226,8 @@ public interface Wrapper {
     Qc := (C5k⋅(P5^ε₁^ε₂^εᵢ))*
     Pe, P5e, Sc, K0, C5k, Qc
     """)
-    public double[][] testIKPart1(Point3d p_euclidean_vector, Vector3d ae_euclidean_vector);
+    public double[][] testIKPart1(Point3d p_euclidean_vector, Vector3d ae_euclidean_vector/*, 
+                Vector3d se_euclidean_vector*/);
     
     //Pc := ExtractFirstPoint(Qc)
     //PIc := (ε₀^ε₃^Pc^εᵢ)*
