@@ -1,0 +1,5 @@
+Exception in thread "main" java.lang.IllegalArgumentException: A language with id 'geomalgelang' is not installed. Installed languages are: [llvm, js].
+	at org.graalvm.truffle/com.oracle.truffle.polyglot.PolyglotEngineException.illegalArgument(PolyglotEngineException.java:125)
+	at org.graalvm.truffle/com.oracle.truffle.polyglot.PolyglotEngineImpl.throwNotInstalled(PolyglotEngineImpl.java:1103)
+	at org.graalvm.truffle/com.oracle.truffle.polyglot.PolyglotEngineImpl.requirePublicLanguage(PolyglotEngineImpl.java:1110)
+-----

@@ -1,0 +1,28 @@
+Exception in thread "main" com.jogamp.opengl.GLException: Caught IllegalArgumentException: Comparison method violates its general contract! on thread main
+	at com.jogamp.opengl.GLException.newGLException(GLException.java:76)
+	at jogamp.opengl.GLDrawableHelper.invokeGLImpl(GLDrawableHelper.java:1327)
+	at jogamp.opengl.GLDrawableHelper.invokeGL(GLDrawableHelper.java:1147)
+	at com.jogamp.newt.opengl.GLWindow.display(GLWindow.java:782)
+	at org.jzy3d.plot3d.rendering.canvas.CanvasNewtAwt.display(CanvasNewtAwt.java:201)
+	at org.jzy3d.plot3d.rendering.canvas.CanvasNewtAwt.forceRepaint(CanvasNewtAwt.java:206)
+	at org.jzy3d.plot3d.rendering.view.View.shoot(View.java:321)
+	at org.jzy3d.plot3d.rendering.view.View.updateBounds(View.java:867)
+	at org.jzy3d.chart.Chart.add(Chart.java:563)
+	at org.jzy3d.chart.Chart.add(Chart.java:509)
+	at de.orat.math.view.euclidview3d.GeometryView3d.addLine(GeometryView3d.java:452)
+-----------------
+
+I believe this can happen, when the QueryStats change while the list of stats get sorted.
+
+I see three ways to go:
+ 1. add synchronization, so that the stats don't change while the list gets sorted
+ 2. extract the information to sort on from the QueryStats and sort on that information
+ 3. make QueryStats immutable and change the QueryStats instances, when the stats gets updated
+
+The first path probably will slow down the execution of jdbc calls.
+The second one will be more memory intensive, but relatively simple to implement. 
+The third seems to be the one where we would have to do the most work.
+
+I tend to go for option two. What do you think?
+---------
+--add-exports java.base/java.lang=ALL-UNNAMED --add-exports java.desktop/sun.awt=ALL-UNNAMED --add-exports java.desktop/sun.java2d=ALL-UNNAMED -Djava.util.Arrays.useLegacyMergeSort=true
