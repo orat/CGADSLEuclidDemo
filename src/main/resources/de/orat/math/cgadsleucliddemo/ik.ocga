@@ -1,13 +1,23 @@
-// dh parameters UR5e
-// Voraussetzung der IK: ortho-parallel basis alpha1=+-pi/2, alpha2=-pi,0 oder pi,
+// Voraussetzung der IK: 
+// 1. ortho-parallel basis, d.h.  alpha_1=+-pi/2, alpha_2=+-pi or 0,
 // d.h. die ersten beiden Achsen senkrecht aufeinander und die 2. und 3. Achse parallel
+// 2. alpha_3=+-pi or 0, d.h. 3. und 4. Achse parallel
+// d.h. 2., 3. und 4. Achse parallel bzw. schneiden sich im Unendlichen
+// dann müssen d_4 und d_5 != 0 sein, d.h. die zugehörigen müssen in Richtung der
+// der entsprechenden Segemente verlaufen. Warum ist das so?
 
+// [Kleppe2016] SphereN3() erzeugt vermutlich ein opns-sphere
+
+// dh parameters UR5e
 a_2 := -0.425
 a_3 := -0.3922
 d_1 := 0.1625
 d_4 := 0.1333
 d_5 := 0.0997
 d_6 := 0.0996
+
+// position of the robots origin
+P_0 := ε₀
 
 // position of the end-effector 
 P_e := p+0.5p²εᵢ+ε₀
@@ -20,115 +30,141 @@ P_5 := t+0.5t²εᵢ+ε₀ // ipns
 Sc := P_5-0.5d_4²εᵢ // ipns
 
 // sphere around the origin
-K_0 := ε₀+(Sc⋅ε₀)εᵢ // ipns
+K_0 := ε₀+(Sc⋅ε₀)εᵢ // sphere ipns
+
+// Not a scalar: -0.15606404492500847 - 0.13146913938591132*eo^e1 + 0.21900647001032345*eo^e2 + 0.07751420458165528*e1^e3 - 0.1291262147176236*e2^e3 + 0.04044502396514208*eo^ei + 0.04570237502118004*e1^ei - 0.07613281619723777*e2^ei + 0.02384638612976224*e3^ei
+//K_0 := ε₀-(Sc*⋅ε₀)εᵢ // so stehts im clu-file aber obige Fehlermeldung
 
 // intersection of Sc and K_0
-C_5k := Sc^K_0
+C_5k := Sc^K_0 // circle ipns
+//C_5k := Sc⋅K_0 // circle ipns - so stehts im clu-file
 
 // intersection of C5k and the horizontal plane through P5
-Pl := P_5∧ε₁^ε₂^εᵢ
-Q_c := C_5k⌋Pl // opns 
+Pl := P_5∧ε₁^ε₂^εᵢ // plane opns, grade-4
+Q_c := Pl⌊C_5k // point-pair opns 
+//Q_c := Pl⌊C_5k* // point-pair opns - so stehts im clu-file
 
-// point Pc with an offset d4 from P5
-// da war vorher - vor sqrt
-P_c := (Q_c+sqrt(abs(Q_c²)))/(-εᵢ⌋Q_c) //P_c = ExtractFirstPoint(Qc) ipns
+// point P_c with an offset d4 from P5
+P_c := (Q_c + lr sqrt(abs(Q_c²)))/(-εᵢ⌋Q_c) //point ipns grade-1, P_c = ExtractFirstPoint(Qc) point ipns
 
-// Extraction of eudlidean part
+// vertical plane through joints 1, 2, 3 and 4
+// FIXME nach paper [Kleppe2016] f.46 und code brauchts hier aber nur P_c, das funktioniert aber nicht
+// origin ε₀ as ipns ∧ ε₃ as ipns ∧ P_c ∧ εᵢ
+Pi_c1 := ε₀∧ε₃∧P_c∧εᵢ // opns P_c vom Typ ipns point
+
+
+// finding P4 (section 5.1)
+// plane parallel to Pi_c that contains P4 and P5
+// Warum geht das so?
+Pi_c_para := Pi_c1* + (P_5⋅Pi_c1*)εᵢ // eq. 47 ipns
+// plane between P_5 and P_e orthogonal to Pi_c and Pi_c_para
+// Warum geht das so?
+Pi_56_ortho := (P_5∧P_e)*∧εᵢ // eq. 48 l.1 opns
+n_56_ortho  := -normalize(Pi_56_ortho⌊ε₀⌊εᵢ)
+Pi_c_ortho := (P_5∧n_56_ortho∧εᵢ)* // ipns
+//Pi_c_ortho := P_5∧n_56_ortho∧εᵢ // ipns wie clu
+L_45a := Pi_c_para∧Pi_c_ortho // ipns
+//L_45a := Pi_c_para⋅Pi_c_ortho // ipns wie clu
+
+S_5  := P_5-(0.5d_5²εᵢ) // ipns
+Q_4  := L_45a*⌊S_5 // opns grade-2
+P_4 := (Q_4 + fn sqrt(abs(Q_4²)))/(-εᵢ⌋Q_4) // ipns grade-1
+
+// finding P3
+S_4  := P_4 + (0.5d_4²εᵢ) // ipns - Kugel um P4 mit radius d4, P3 liegt auf S_4
+//S_4  := P_4 - (0.5d_4²εᵢ) // ipns - wie clu
+
+// Extraction of euclidean part
 // To map a conformal vector back into a vector from the original space, the 
 // vector is first normalized, then rejected from the minkowski plane 
 // Perwass equ. 4.37
 P_cn := P_c/(εᵢ⌋P_c)  // 1. Normalisierung $$ X = \frac{X}{X \cdot e_{\infty}}$$
-P_ce := (P_cn∧E₀)/E₀  // 2. Rejection from the Minkovski-Plane  $$x = X \wedge E_0\, E_0^{-1}$$
+P_ce := (P_cn∧E₀)/E₀  // 2. Rejection from the Minkovski-Plane = euclidean-vector  $$x = X \wedge E_0\, E_0^{-1}$$
 
-// plane through joints 1, 2, 3 and 4
-Pi_c := (ε₀∧ε₃∧P_ce∧εᵢ) // opns P_ce vom Typ euclidean-vector
+// testweise
+Pi_c := ε₀∧ε₃∧P_ce∧εᵢ
 
-// finding P4
-// plane parallel to Pi_c that contains P4 and P5
-// Warum geht das so?
-Pic_parallel := Pi_c* + (P_5⋅Pi_c*)εᵢ // eq. 47 ipns
-// plane between P_5 and P_e orthogonal to Pi_c and Pic_parallel
-// Warum geht das so?
-Pi56_orthogonal := (P_5∧P_e)*∧εᵢ // eq. 48 l.1 opns
-
-n56_orthogonal  := normalize(-(Pi56_orthogonal⌊ε₀)⌊εᵢ)
-
-Pic_orthogonal := (P_5∧n56_orthogonal∧εᵢ)* // ipns
-
-L_45 := Pic_parallel∧Pic_orthogonal // ipns
-
-S_5  := P_5-(0.5d_5²εᵢ) // ipns
-Q_4  := L_45*⌊S_5 // opns grade-2
-P_4 := (Q_4-sqrt(abs(Q_4²)))/(-εᵢ⌋Q_4) // ipns grade-1
-
-// finding P3
-S_4  := P_4 + (0.5d_4²εᵢ) // ipns - Kugel um P4 mit radius d4, P3 liegt auf S_4
+//FIXME hier gehts schief mit Pi_c1
 L_34 := P_4∧Pi_c*∧εᵢ // opns - Linie durch P4 mit Normalenvektor von Pi_c als Richtung
 Q_3  := L_34⌊S_4 // opns grade-2
-// + für second solution ist richtig, liegt also im Gelenkzentrum
-P_3 := (Q_3+sqrt(abs(Q_3²)))/(-εᵢ⌋Q_3) // ipns WORKAROUND abs() - da das Argument der Wurzel negativ sein kann
+//Q_3  := L_34⌊S_4* // opns grade-2 - wie clu
+P_3 := (Q_3 + lr sqrt(abs(Q_3²)))/(-εᵢ⌋Q_3) 
 
-// finding P1 
+// finding P1 (section 5.2)
 P_1 := d_1ε₃+0.5d_1²εᵢ+ε₀ //P_1 := createPoint(0, 0, d1)
 
-// finding P2 by intersection of of two spheres with the veritcal plane
+// finding P2 by intersection of two spheres with the vertical plane
 S_1 := P_1-0.5a_2²εᵢ // ipns
-S_3 := P_3-0.5a_3²εᵢ // ipns "-" statt "+" im cluscript entspricht Bachelor-Arbeit
+S_3 := P_3-0.5a_3²εᵢ // ipns
 C_2 := S_1∧S_3 // ipns
-Q_2 := C_2⌋Pi_c // opns
-P_2 := (Q_2-sqrt(abs(Q_2²)))/(-εᵢ⌋Q_2) 
+//C_2 := S_1*∧S_3* // ipns wie clu
+Q_2 := C_2⌋Pi_c1 // opns
+P_2 := (Q_2 -ud sqrt(abs(Q_2²)))/(-εᵢ⌋Q_2) 
 
 //TODO falls robot of class A or C represented by a3 !=0
 // dann müssen P_2v etc. bestimmt werden
 
+
 // joint angles
 
-L_01 := ε₀∧ε₃∧εᵢ // opns
-L_12 := P_1∧P_2∧εᵢ // opns
-L_23 := (P_2∧P_3∧εᵢ) // opns
+Pi_c2 := normalize(ε₀∧ε₃∧P_3∧εᵢ)
 
-P_0 := ε₀
+L_01 := P_0∧P_1∧εᵢ // opns
+L_12 := P_1∧P_2∧εᵢ // opns
+L_23 := P_2∧P_3∧εᵢ // opns
+L_45 := P_5∧P_e∧εᵢ // opns
 
 // 1. joint (base)
 a_1 := ε₂
-b_1 := -Pi_c // *k1
+b_1 := -lr Pi_c2* 
 N_1 := ε₁∧ε₂
-//x_1 := (a_1∧b_1)/N_1
-//y_1 := a_1⋅b_1
+y_1 := (a_1∧b_1)/N_1
+x_1 := a_1⋅b_1
+theta_1 := (180/π) atan2(y_1, x_1)  // falsch, 180grad Problem
 
 // 2. joint (shoulder) ok
 a_2 := L_01⌊ε₀⌊εᵢ
 b_2 := L_12⌊ε₀⌊εᵢ
-N_2 := -Pi_c⌊ε₀⌊εᵢ // *k1
-x_2 := (a_2∧b_2)/N_2
-y_2 := a_2⋅b_2
+N_2 := normalize(-lr Pi_c2⌊ε₀⌊εᵢ) 
+//N_2n := N_2/(sqrt(abs(N_2 N_2˜))) // normalize, alternativ ip statt gp mit reverse?
+y_2 := (a_2∧b_2)/N_2
+x_2 := a_2⋅b_2
+theta_2 := (180/π) atan2(y_2, x_2) -90 // ok aber ungenau um 5grad
 
 // 3. joint (elbow) ok
-a_3 := L_12⌊ε₀⌊εᵢ
+a_3 := L_12⌊ε₀⌊εᵢ // = b_2
 b_3 := L_23⌊ε₀⌊εᵢ
-N_3 := -(Pi_c⌊ε₀)⌊εᵢ
-x_3 := (a_3∧b_3)/N_3
-y_3 := a_3⋅b_3
+N_3 := normalize(-(Pi_c2⌊ε₀)⌊εᵢ) // = N_2
+//N_3n := N_3/(sqrt(abs(N_3 N_3˜))) // normalize
+y_3 := (a_3∧b_3)/N_3
+x_3 := a_3⋅b_3
+theta_3 := (180/π) atan2(y_3, x_3) //ok aber ungenau um 5grad
 
 // 4. joint (wrist-1)
-a_4 := (L_23⌊ε₀)⌊εᵢ
-b_4 := (L_45*⌊ε₀)⌊εᵢ
-N_4 := -(Pi_c⌊ε₀)⌊εᵢ
-x_4 := (a_4∧b_4)/N_4
-y_4 := a_4⋅b_4
+a_4 := L_23⌊ε₀⌊εᵢ // = b_3
+b_4 := L_45*⌊ε₀⌊εᵢ
+N_4 := -(Pi_c2⌊ε₀)⌊εᵢ // = N_2
+y_4 := (a_4∧b_4)/N_4
+x_4 := a_4⋅b_4
+theta_4 := (180/π) atan2(y_4, x_4) -90 // ok
 
 // 5. joint (wrist-2)
-a_5 := P_c // *k1
-b_5 := -ae
-N_5 := (-L_45∧ε₀)⌊εᵢ
-x_5 := (a_5∧b_5)/N_5
-y_5 := a_5⋅b_5
+a_5 := lr Pi_c2* // *k1
+b_5 := -ae //(ae-ε₀)∧εᵢ⌊ε₀  [Wagner2021] and [Kleppe2016] table -ae // [Kleppe2016] github: (VecN3(ae)-ε₀)∧εᵢ⌊ε₀ 
+//FIXME
+// Umstellung auf L_45* funktioniert nicht
+N_5 :=  normalize(-((L_45a∧εᵢ)⌊ε₀)) // [Kleppe2016] github code, [Wagner2021]: (-L_45*∧ε₀)⌊εᵢ without normalize seems to be wrong, identical to table in [Kleppe2016]
+//N_5n := N_5/(sqrt(abs(N_5 N_5˜))) // normalize, statt gp und reverse sollte auch ip funktionieren
+y_5 := (a_5∧b_5)/N_5 
+x_5 := a_5⋅b_5
+// falsches Vorzeichen
+theta_5 := (180/π) atan2(y_5, x_5) 
 
 // 6. joint (TCP)
-a_6 := L_45*⌊ε₀⌊εᵢ
+a_6 := L_45a*⌊ε₀⌊εᵢ // L_45* führt zu theata_6=0, L_45 (clu) führt zu Not a scalar:-0.09959999999999992*e1^e3
 b_6 := -se
-N_6 := -ae* // * statt (ε₃^ε₂^ε₁)
-x_6 := (a_6∧b_6)/N_6
-y_6 := a_6⋅b_6
-
-P_e, P_5, Sc, K_0, C_5k, Pl, Q_c, P_c, P_ce, Pi_c, Pic_parallel, Pi56_orthogonal, n56_orthogonal, Pic_orthogonal, L_45, S_5, Q_4, P_4, S_4, L_34, Q_3, P_3, P_1, S_1, S_3, C_2, Q_2, P_2, L_01, L_12, L_23, a_1, b_1, N_1, a_2, b_2, N_2, a_3, b_3, N_3, a_4, b_4, N_4, a_5, b_5, N_5, a_6, b_6, N_6
+N_6 := -ae/E₃ 
+y_6 := (a_6∧b_6)/N_6
+x_6 := a_6⋅b_6
+theta_6 := (180/π) atan2(y_6, x_6) // ok
+P_e, P_5, Sc, K_0, C_5k, Pl, Q_c, P_c, P_ce, Pi_c1, Pi_c_para, Pi_56_ortho, n_56_ortho, Pi_c_ortho, L_45a, S_5, Q_4, P_4, S_4, L_34, Q_3, P_3, P_1, S_1, S_3, C_2, Q_2, P_2, L_01, L_12, L_23, a_1, b_1, N_1, a_2, b_2, N_2, a_3, b_3, N_3, a_4, b_4, N_4, a_5, b_5, N_5, a_6, b_6, N_6, theta_1, theta_2, theta_3, theta_4, x_5, y_5, theta_5, theta_6
